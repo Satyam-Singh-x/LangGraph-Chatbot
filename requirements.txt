@@ -2,8 +2,9 @@ streamlit
 
 langchain
 langchain-core
-langgraph
 langchain-community
+
+langgraph==0.0.39
 
 langchain-google-genai
 google-generativeai

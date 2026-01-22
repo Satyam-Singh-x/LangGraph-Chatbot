@@ -7,7 +7,8 @@ from typing import TypedDict, Annotated
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint import SqliteSaver
+
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
@@ -196,3 +197,4 @@ def clear_all_chats():
     conn.commit()
     conn.close()
 clear_all_chats()
+

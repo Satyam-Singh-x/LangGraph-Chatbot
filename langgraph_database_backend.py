@@ -1,6 +1,5 @@
 # ====================== langgraph_database_backend.py ======================
-
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import OllamaLLM
 from dotenv import load_dotenv
 import sqlite3
 from typing import TypedDict, Annotated
@@ -8,14 +7,13 @@ from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, START
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.sqlite import SqliteSaver
-
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
 import requests
 import os
 import base64
-
+from datetime import datetime
 # -------------------------------------------------------------------------
 # Load environment variables
 # -------------------------------------------------------------------------
@@ -24,9 +22,11 @@ load_dotenv()
 # -------------------------------------------------------------------------
 # Initialize Gemini Model
 # -------------------------------------------------------------------------
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-lite",
-    api_key=os.getenv("GEMINI_API_KEY")
+from langchain_ollama import ChatOllama
+
+llm = ChatOllama(
+    model="qwen2.5:latest",
+    temperature=0
 )
 
 # -------------------------------------------------------------------------
@@ -50,6 +50,12 @@ def calculator(first_num: float, second_num: float, operation: str) -> dict:
         return {'first_num': first_num, 'second_num': second_num, 'operation': operation, 'result': result}
     except Exception as e:
         return {'error': str(e)}
+
+
+@tool
+def get_current_datetime() -> str:
+    """Get the current date and time."""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 @tool(description="Fetch latest stock price using Alpha Vantage API")
 def get_stock_price(symbol: str) -> dict:
@@ -95,10 +101,26 @@ def find_local_events(city: str):
     except Exception as e:
         return{"error": str(e)}
 
+
+@tool
+def get_news(topic: str):
+    """Fetch latest news headlines"""
+
+    url =f"https://newsapi.org/v2/everything?q={topic}&pageSize=5&sortBy=publishedAt&apiKey={os.getenv('NEWS_API')}"
+
+
+    res = requests.get(url)
+    data = res.json()
+
+    if res.status_code != 200:
+        return {"error": True, "message": data.get("message", "News error")}
+
+    return data.get("articles", [])
+
 # -------------------------------------------------------------------------
 # Bind tools to LLM
 # -------------------------------------------------------------------------
-tools = [search_tool, get_stock_price, calculator, get_weather, find_local_events]
+tools = [search_tool, get_stock_price, calculator, get_weather, find_local_events,get_news]
 llm_with_tools = llm.bind_tools(tools)
 
 # -------------------------------------------------------------------------
@@ -197,5 +219,3 @@ def clear_all_chats():
     conn.commit()
     conn.close()
 clear_all_chats()
-
-

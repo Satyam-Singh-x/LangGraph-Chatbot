@@ -27,6 +27,8 @@ ChatGPT-like professional frontend
 
 The system is fully local-first, extensible, and suitable for portfolio, demos, or internal tools.
 
+Demo video Link: https://youtu.be/e3pjGZ_ms3Q?si=4iUSqW7isewMpblC
+
 
 🧩 System Architecture
 
